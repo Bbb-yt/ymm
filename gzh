@@ -1,0 +1,807 @@
+```html
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>公众号智能排版助手 - AI 免费版</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+            background: #f0f2f5;
+            color: #333;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        header {
+            background: #fff;
+            padding: 15px 20px;
+            border-bottom: 1px solid #e0e0e0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.03);
+        }
+        header h1 {
+            font-size: 24px;
+            font-weight: 600;
+            color: #1e3c72;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+        .toolbar {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin-bottom: 8px;
+        }
+        .toolbar label {
+            font-size: 14px;
+            color: #555;
+            font-weight: 500;
+        }
+        .toolbar select, .toolbar input {
+            padding: 8px 12px;
+            border-radius: 6px;
+            border: 1px solid #ccc;
+            font-size: 14px;
+            background: #fff;
+        }
+        .toolbar select {
+            min-width: 180px;
+            cursor: pointer;
+        }
+        .toolbar input {
+            min-width: 300px;
+            flex: 1;
+            max-width: 400px;
+        }
+        .toolbar button {
+            padding: 8px 20px;
+            background: #1aad19;
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background 0.2s;
+            font-weight: 500;
+            white-space: nowrap;
+        }
+        .toolbar button:hover {
+            background: #179c16;
+        }
+        .toolbar button.ai-btn {
+            background: #6c5ce7;
+        }
+        .toolbar button.ai-btn:hover {
+            background: #5a4bd1;
+        }
+        main {
+            flex: 1;
+            display: flex;
+            flex-direction: row;
+            max-width: 1300px;
+            width: 100%;
+            margin: 20px auto;
+            gap: 20px;
+            padding: 0 20px;
+        }
+        .editor-pane, .preview-pane {
+            flex: 1;
+            background: #fff;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            display: flex;
+            flex-direction: column;
+            min-height: 600px;
+            overflow: hidden;
+        }
+        .pane-header {
+            background: #fafafa;
+            padding: 12px 15px;
+            border-bottom: 1px solid #e0e0e0;
+            font-size: 14px;
+            font-weight: 600;
+            color: #666;
+        }
+        textarea {
+            flex: 1;
+            border: none;
+            outline: none;
+            resize: none;
+            padding: 15px;
+            font-size: 15px;
+            line-height: 1.6;
+            font-family: inherit;
+            color: #333;
+            background: #fefefe;
+        }
+        .preview-content {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            font-size: 16px;
+            line-height: 1.8;
+            word-break: break-word;
+        }
+        footer {
+            text-align: center;
+            padding: 20px;
+            font-size: 12px;
+            color: #999;
+            background: #fff;
+            border-top: 1px solid #e0e0e0;
+            line-height: 1.8;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        footer p {
+            margin: 5px 0;
+        }
+        @media (max-width: 768px) {
+            main {
+                flex-direction: column;
+            }
+            .toolbar input {
+                min-width: 100%;
+                max-width: 100%;
+            }
+        }
+        /* 预览区基础样式 */
+        .preview-content img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .preview-content video {
+            max-width: 100%;
+            height: auto;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>📝 公众号智能排版助手</h1>
+        <div class="toolbar">
+            <label for="template-select">🎨 预设模板：</label>
+            <select id="template-select">
+                <optgroup label="商务风格">
+                    <option value="business-blue">商务·深蓝稳重</option>
+                    <option value="business-dark">商务·暗夜高端</option>
+                    <option value="business-green">商务·墨绿专业</option>
+                </optgroup>
+                <optgroup label="简约风格">
+                    <option value="simple-green">简约·清新绿意</option>
+                    <option value="simple-gray">简约·极简灰白</option>
+                    <option value="simple-warm">简约·暖阳米色</option>
+                </optgroup>
+                <optgroup label="政务风格">
+                    <option value="gov-red">政务·红头正式</option>
+                    <option value="gov-blue">政务·蓝色庄重</option>
+                    <option value="gov-classic">政务·经典稳重</option>
+                </optgroup>
+                <optgroup label="公告风格">
+                    <option value="notice-red">公告·醒目红</option>
+                    <option value="notice-yellow">公告·警示黄</option>
+                    <option value="notice-blue">公告·通知蓝</option>
+                </optgroup>
+                <optgroup label="文艺风格">
+                    <option value="literary-warm">文艺·暖棕书香</option>
+                    <option value="literary-green">文艺·墨绿复古</option>
+                    <option value="literary-pink">文艺·粉黛柔和</option>
+                </optgroup>
+                <optgroup label="花式风格">
+                    <option value="fancy-gradient">花式·渐变动感</option>
+                    <option value="fancy-shadow">花式·立体阴影</option>
+                    <option value="fancy-colorful">花式·多彩活泼</option>
+                </optgroup>
+            </select>
+            <button id="copy-btn">📋 复制到公众号</button>
+        </div>
+        <div class="toolbar">
+            <label for="ai-desc">🤖 AI 智能排版：</label>
+            <input type="text" id="ai-desc" placeholder="例如：深蓝色商务风，标题加粗，引用有背景色，适合企业公众号">
+            <button id="ai-btn" class="ai-btn">✨ 应用 AI 排版</button>
+        </div>
+    </header>
+    <main>
+        <div class="editor-pane">
+            <div class="pane-header">✏️ 输入文章（支持 Markdown 语法，图片用 ![描述](图片链接)）</div>
+            <textarea id="editor" placeholder="示例：&#10;# 我的文章标题&#10;## 二级标题&#10;这是一段正文，**重点内容**会加粗。&#10;> 这是一段引用&#10;- 列表项一&#10;- 列表项二&#10;![示例图片](https://picsum.photos/600/300)&#10;[链接文字](https://example.com)"></textarea>
+        </div>
+        <div class="preview-pane">
+            <div class="pane-header">👀 实时预览（自动排版效果）</div>
+            <div id="preview" class="preview-content"></div>
+        </div>
+    </main>
+    <footer>
+        <p>⚠️ 免责声明：本工具仅供学习交流使用，不对排版结果负责。用户应自行确认生成内容符合微信公众号平台规范及相关法律法规。</p>
+        <p>🔒 隐私说明：本工具完全在浏览器本地运行，不存储、不上传任何用户内容。用户使用本工具产生的任何内容版权归用户本人所有。</p>
+        <p>📌 使用提示：请使用无版权图片（如 Unsplash、Pexels），字体使用系统默认，避免侵权风险。</p>
+    </footer>
+
+    <script>
+        // ==================== 预设模板库 ====================
+        const templates = {
+            // ---------- 商务 ----------
+            'business-blue': {
+                h1: 'font-size:22px;color:#1e3c72;font-weight:bold;margin:16px 0 8px;border-bottom:2px solid #1e3c72;padding-bottom:6px;',
+                h2: 'font-size:18px;color:#2c3e50;font-weight:bold;margin:14px 0 6px;',
+                h3: 'font-size:16px;color:#34495e;font-weight:bold;margin:12px 0 4px;',
+                p: 'font-size:16px;color:#2c3e50;line-height:1.8;margin:8px 0;',
+                blockquote: 'border-left:4px solid #1e3c72;background:#f0f3f7;padding:10px 15px;margin:10px 0;color:#555;',
+                ul: 'margin:8px 0;padding-left:25px;',
+                li: 'margin:4px 0;line-height:1.8;',
+                strong: 'font-weight:bold;color:#c0392b;',
+                em: 'font-style:italic;color:#555;',
+                a: 'color:#1e3c72;text-decoration:underline;',
+                img: 'max-width:100%;border-radius:4px;margin:10px 0;'
+            },
+            'business-dark': {
+                h1: 'font-size:22px;color:#2c3e50;font-weight:bold;margin:16px 0 8px;text-shadow:1px 1px 2px rgba(0,0,0,0.1);',
+                h2: 'font-size:18px;color:#34495e;font-weight:bold;margin:14px 0 6px;',
+                h3: 'font-size:16px;color:#5d6d7e;font-weight:bold;margin:12px 0 4px;',
+                p: 'font-size:16px;color:#2c3e50;line-height:1.8;margin:8px 0;',
+                blockquote: 'border-left:4px solid #34495e;background:#ecf0f1;padding:10px 15px;margin:10px 0;color:#555;',
+                ul: 'margin:8px 0;padding-left:25px;',
+                li: 'margin:4px 0;line-height:1.8;',
+                strong: 'font-weight:bold;color:#e74c3c;',
+                em: 'font-style:italic;color:#7f8c8d;',
+                a: 'color:#34495e;text-decoration:underline;',
+                img: 'max-width:100%;border-radius:4px;margin:10px 0;'
+            },
+            'business-green': {
+                h1: 'font-size:22px;color:#1e5631;font-weight:bold;margin:16px 0 8px;border-bottom:2px solid #1e5631;padding-bottom:6px;',
+                h2: 'font-size:18px;color:#2d6a4f;font-weight:bold;margin:14px 0 6px;',
+                h3: 'font-size:16px;color:#40916c;font-weight:bold;margin:12px 0 4px;',
+                p: 'font-size:16px;color:#2d6a4f;line-height:1.8;margin:8px 0;',
+                blockquote: 'border-left:4px solid #1e5631;background:#f0f7f4;padding:10px 15px;margin:10px 0;color:#555;',
+                ul: 'margin:8px 0;padding-left:25px;',
+                li: 'margin:4px 0;line-height:1.8;',
+                strong: 'font-weight:bold;color:#d62828;',
+                em: 'font-style:italic;color:#666;',
+                a: 'color:#1e5631;text-decoration:underline;',
+                img: 'max-width:100%;border-radius:4px;margin:10px 0;'
+            },
+            // ---------- 简约 ----------
+            'simple-green': {
+                h1: 'font-size:22px;color:#2e7d32;font-weight:bold;margin:16px 0 8px;',
+                h2: 'font-size:18px;color:#388e3c;font-weight:bold;margin:14px 0 6px;',
+                h3: 'font-size:16px;color:#4caf50;font-weight:bold;margin:12px 0 4px;',
+                p: 'font-size:16px;color:#333;line-height:1.8;margin:8px 0;',
+                blockquote: 'border-left:4px solid #4caf50;background:#f1f8e9;padding:10px 15px;margin:10px 0;color:#555;',
+                ul: 'margin:8px 0;padding-left:25px;',
+                li: 'margin:4px 0;line-height:1.8;',
+                strong: 'font-weight:bold;color:#e65100;',
+                em: 'font-style:italic;color:#777;',
+                a: 'color:#2e7d32;text-decoration:none;border-bottom:1px solid #2e7d32;',
+                img: 'max-width:100%;border-radius:8px;margin:10px 0;'
+            },
+            'simple-gray': {
+                h1: 'font-size:22px;color:#424242;font-weight:bold;margin:16px 0 8px;',
+                h2: 'font-size:18px;color:#616161;font-weight:bold;margin:14px 0 6px;',
+                h3: 'font-size:16px;color:#757575;font-weight:bold;margin:12px 0 4px;',
+                p: 'font-size:16px;color:#424242;line-height:1.8;margin:8px 0;',
+                blockquote: 'border-left:4px solid #9e9e9e;background:#f5f5f5;padding:10px 15px;margin:10px 0;color:#666;',
+                ul: 'margin:8px 0;padding-left:25px;',
+                li: 'margin:4px 0;line-height:1.8;',
+                strong: 'font-weight:bold;color:#000;',
+                em: 'font-style:italic;color:#777;',
+                a: 'color:#616161;text-decoration:underline;',
+                img: 'max-width:100%;border-radius:4px;margin:10px 0;'
+            },
+            'simple-warm': {
+                h1: 'font-size:22px;color:#8d6e63;font-weight:bold;margin:16px 0 8px;',
+                h2: 'font-size:18px;color:#a1887f;font-weight:bold;margin:14px 0 6px;',
+                h3: 'font-size:16px;color:#bcaaa4;font-weight:bold;margin:12px 0 4px;',
+                p: 'font-size:16px;color:#4e342e;line-height:1.8;margin:8px 0;',
+                blockquote: 'border-left:4px solid #d7ccc8;background:#faf6f2;padding:10px 15px;margin:10px 0;color:#666;',
+                ul: 'margin:8px 0;padding-left:25px;',
+                li: 'margin:4px 0;line-height:1.8;',
+                strong: 'font-weight:bold;color:#bf360c;',
+                em: 'font-style:italic;color:#777;',
+                a: 'color:#8d6e63;text-decoration:underline;',
+                img: 'max-width:100%;border-radius:8px;margin:10px 0;'
+            },
+            // ---------- 政务 ----------
+            'gov-red': {
+              h1: 'font-size:22px;color:#b71c1c;font-weight:bold;margin:16px 0 8px;text-align:center;border-bottom:2px solid #b71c1c;padding-bottom:6px;',
+                h2: 'font-size:18px;color:#c62828;font-weight:bold;margin:14px 0 6px;',
+                h3: 'font-size:16px;color:#d32f2f;font-weight:bold;margin:12px 0 4px;',
+                p: 'font-size:16px;color:#333;line-height:1.8;margin:8px 0;text-indent:2em;',
+                blockquote: 'border-left:4px solid #b71c1c;background:#ffebee;padding:10px 15px;margin:10px 0;color:#555;',
+                ul: 'margin:8px 0;padding-left:25px;',
+                li: 'margin:4px 0;line-height:1.8;',
+                strong: 'font-weight:bold;color:#b71c1c;',
+                em: 'font-style:italic;color:#666;',
+                a: 'color:#b71c1c;text-decoration:underline;',
+                img: 'max-width:100%;border-radius:4px;margin:10px 0;'
+            },
+            'gov-blue': {
+                h1: 'font-size:22px;color:#0d47a1;font-weight:bold;margin:16px 0 8px;text-align:center;border-bottom:2px solid #0d47a1;padding-bottom:6px;',
+                h2: 'font-size:18px;color:#1565c0;font-weight:bold;margin:14px 0 6px;',
+                h3: 'font-size:16px;color:#1976d2;font-weight:bold;margin:12px 0 4px;',
+                p: 'font-size:16px;color:#333;line-height:1.8;margin:8px 0;text-indent:2em;',
+                blockquote: 'border-left:4px solid #0d47a1;background:#e3f2fd;padding:10px 15px;margin:10px 0;color:#555;',
+                ul: 'margin:8px 0;padding-left:25px;',
+                li: 'margin:4px 0;line-height:1.8;',
+                strong: 'font-weight:bold;color:#0d47a1;',
+                em: 'font-style:italic;color:#666;',
+                a: 'color:#0d47a1;text-decoration:underline;',
+                img: 'max-width:100%;border-radius:4px;margin:10px 0;'
+            },
+            'gov-classic': {
+                h1: 'font-size:22px;color:#3e2723;font-weight:bold;margin:16px 0 8px;text-align:center;border-bottom:2px solid #3e2723;padding-bottom:6px;',
+                h2: 'font-size:18px;color:#5d4037;font-weight:bold;margin:14px 0 6px;',
+                h3: 'font-size:16px;color:#795548;font-weight:bold;margin:12px 0 4px;',
+                p: 'font-size:16px;color:#3e2723;line-height:1.8;margin:8px 0;text-indent:2em;',
+                blockquote: 'border-left:4px solid #3e2723;background:#efebe9;padding:10px 15px;margin:10px 0;color:#555;',
+                ul: 'margin:8px 0;padding-left:25px;',
+                li: 'margin:4px 0;line-height:1.8;',
+                strong: 'font-weight:bold;color:#bf360c;',
+                em: 'font-style:italic;color:#666;',
+                a: 'color:#3e2723;text-decoration:underline;',
+                img: 'max-width:100%;border-radius:4px;margin:10px 0;'
+            },
+            // ---------- 公告 ----------
+            'notice-red': {
+                h1: 'font-size:22px;color:#d32f2f;font-weight:bold;margin:16px 0 8px;background:#ffebee;padding:8px 15px;border-radius:4px;',
+                h2: 'font-size:18px;color:#e53935;font-weight:bold;margin:14px 0 6px;',
+                h3: 'font-size:16px;color:#ef5350;font-weight:bold;margin:12px 0 4px;',
+                p: 'font-size:16px;color:#333;line-height:1.8;margin:8px 0;',
+                blockquote: 'border-left:4px solid #d32f2f;background:#ffebee;padding:10px 15px;margin:10px 0;color:#555;',
+                ul: 'margin:8px 0;padding-left:25px;',
+                li: 'margin:4px 0;line-height:1.8;',
+                strong: 'font-weight:bold;color:#d32f2f;',
+                em: 'font-style:italic;color:#666;',
+                a: 'color:#d32f2f;text-decoration:underline;',
+                img: 'max-width:100%;border-radius:4px;margin:10px 0;'
+            },
+            'notice-yellow': {
+                h1: 'font-size:22px;color:#f57f17;font-weight:bold;margin:16px 0 8px;background:#fff8e1;padding:8px 15px;border-radius:4px;',
+                h2: 'font-size:18px;color:#f9a825;font-weight:bold;margin:14px 0 6px;',
+                h3: 'font-size:16px;color:#fbc02d;font-weight:bold;margin:12px 0 4px;',
+                p: 'font-size:16px;color:#333;line-height:1.8;margin:8px 0;',
+                blockquote: 'border-left:4px solid #f57f17;background:#fff8e1;padding:10px 15px;margin:10px 0;color:#555;',
+                ul: 'margin:8px 0;padding-left:25px;',
+                li: 'margin:4px 0;line-height:1.8;',
+                strong: 'font-weight:bold;color:#f57f17;',
+                em: 'font-style:italic;color:#666;',
+                a: 'color:#f57f17;text-decoration:underline;',
+                img: 'max-width:100%;border-radius:4px;margin:10px 0;'
+            },
+            'notice-blue': {
+                h1: 'font-size:22px;color:#1565c0;font-weight:bold;margin:16px 0 8px;background:#e3f2fd;padding:8px 15px;border-radius:4px;',
+                h2: 'font-size:18px;color:#1976d2;font-weight:bold;margin:14px 0 6px;',
+                h3: 'font-size:16px;color:#1e88e5;font-weight:bold;margin:12px 0 4px;',
+                p: 'font-size:16px;color:#333;line-height:1.8;margin:8px 0;',
+                blockquote: 'border-left:4px solid #1565c0;background:#e3f2fd;padding:10px 15px;margin:10px 0;color:#555;',
+                ul: 'margin:8px 0;padding-left:25px;',
+                li: 'margin:4px 0;line-height:1.8;',
+                strong: 'font-weight:bold;color:#1565c0;',
+                em: 'font-style:italic;color:#666;',
+                a: 'color:#1565c0;text-decoration:underline;',
+                img: 'max-width:100%;border-radius:4px;margin:10px 0;'
+            },
+            // ---------- 文艺 ----------
+            'literary-warm': {
+                h1: 'font-size:22px;color:#5d4037;font-weight:bold;margin:16px 0 8px;text-align:center;',
+                h2: 'font-size:18px;color:#6d4c41;font-weight:bold;margin:14px 0 6px;',
+                h3: 'font-size:16px;color:#795548;font-weight:bold;margin:12px 0 4px;',
+                p: 'font-size:16px;color:#4e342e;line-height:1.9;margin:8px 0;',
+                blockquote: 'border-left:4px solid #bcaaa4;background:#faf6f2;padding:10px 15px;margin:10px 0;color:#666;font-style:italic;',
+                ul: 'margin:8px 0;padding-left:25px;',
+                li: 'margin:4px 0;line-height:1.9;',
+                strong: 'font-weight:bold;color:#bf360c;',
+                em: 'font-style:italic;color:#8d6e63;',
+                a: 'color:#5d4037;text-decoration:none;border-bottom:1px dashed #5d4037;',
+                 img: 'max-width:100%;border-radius:8px;margin:10px 0;'
+            },
+            'literary-green': {
+                h1: 'font-size:22px;color:#2e4a3a;font-weight:bold;margin:16px 0 8px;text-align:center;',
+                h2: 'font-size:18px;color:#3a5f4b;font-weight:bold;margin:14px 0 6px;',
+                h3: 'font-size:16px;color:#4a7c5c;font-weight:bold;margin:12px 0 4px;',
+                p: 'font-size:16px;color:#2e4a3a;line-height:1.9;margin:8px 0;',
+                blockquote: 'border-left:4px solid #8aa79a;background:#f4f8f6;padding:10px 15px;margin:10px 0;color:#555;font-style:italic;',
+                ul: 'margin:8px 0;padding-left:25px;',
+                li: 'margin:4px 0;line-height:1.9;',
+                strong: 'font-weight:bold;color:#a0522d;',
+                em: 'font-style:italic;color:#6b8f7a;',
+                a: 'color:#2e4a3a;text-decoration:none;border-bottom:1px dashed #2e4a3a;',
+                img: 'max-width:100%;border-radius:8px;margin:10px 0;'
+            },
+            'literary-pink': {
+                h1: 'font-size:22px;color:#8d4a5b;font-weight:bold;margin:16px 0 8px;text-align:center;',
+                h2: 'font-size:18px;color:#9d5a6b;font-weight:bold;margin:14px 0 6px;',
+                h3: 'font-size:16px;color:#b07080;font-weight:bold;margin:12px 0 4px;',
+                p: 'font-size:16px;color:#5c3a44;line-height:1.9;margin:8px 0;',
+                blockquote: 'border-left:4px solid #d4a0b0;background:#fdf5f7;padding:10px 15px;margin:10px 0;color:#666;font-style:italic;',
+                ul: 'margin:8px 0;padding-left:25px;',
+                li: 'margin:4px 0;line-height:1.9;',
+                strong: 'font-weight:bold;color:#c2185b;',
+                em: 'font-style:italic;color:#b07080;',
+                a: 'color:#8d4a5b;text-decoration:none;border-bottom:1px dashed #8d4a5b;',
+                img: 'max-width:100%;border-radius:8px;margin:10px 0;'
+            },
+            // ---------- 花式 ----------
+            'fancy-gradient': {
+                h1: 'font-size:22px;font-weight:bold;margin:16px 0 8px;background:linear-gradient(90deg,#ff6b6b,#4ecdc4);-webkit-background-clip:text;-webkit-text-fill-color:transparent;',
+                h2: 'font-size:18px;font-weight:bold;margin:14px 0 6px;background:linear-gradient(90deg,#f9ca24,#f0932b);-webkit-background-clip:text;-webkit-text-fill-color:transparent;',
+                h3: 'font-size:16px;font-weight:bold;margin:12px 0 4px;color:#6c5ce7;',
+                p: 'font-size:16px;color:#2d3436;line-height:1.8;margin:8px 0;',
+                blockquote: 'border-left:4px solid #6c5ce7;background:#f8f9fa;padding:10px 15px;margin:10px 0;color:#555;',
+                ul: 'margin:8px 0;padding-left:25px;',
+                li: 'margin:4px 0;line-height:1.8;',
+                strong: 'font-weight:bold;color:#e84393;',
+                em: 'font-style:italic;color:#636e72;',
+                a: 'color:#0984e3;text-decoration:underline;',
+                img: 'max-width:100%;border-radius:12px;margin:10px 0;'
+            },
+            'fancy-shadow': {
+                h1: 'font-size:22px;font-weight:bold;margin:16px 0 8px;color:#2c3e50;text-shadow:2px 2px 4px rgba(0,0,0,0.2);',
+                h2: 'font-size:18px;font-weight:bold;margin:14px 0 6px;color:#34495e;text-shadow:1px 1px 3px rgba(0,0,0,0.15);',
+                h3: 'font-size:16px;font-weight:bold;margin:12px 0 4px;color:#5d6d7e;',
+                p: 'font-size:16px;color:#2c3e50;line-height:1.8;margin:8px 0;',
+                blockquote: 'border-left:4px solid #bdc3c7;background:#f4f6f7;padding:10px 15px;margin:10px 0;color:#555;box-shadow:0 2px 6px rgba(0,0,0,0.05);',
+                ul: 'margin:8px 0;padding-left:25px;',
+                li: 'margin:4px 0;line-height:1.8;',
+                strong: 'font-weight:bold;color:#e74c3c;',
+                em: 'font-style:italic;color:#7f8c8d;',
+                a: 'color:#2980b9;text-decoration:underline;',
+                img: 'max-width:100%;border-radius:8px;margin:10px 0;box-shadow:0 4px 8px rgba(0,0,0,0.1);'
+            },
+            'fancy-colorful': {
+                h1: 'font-size:22px;font-weight:bold;margin:16px 0 8px;color:#e74c3c;border-bottom:3px dashed #e74c3c;padding-bottom:6px;',
+                h2: 'font-size:18px;font-weight:bold;margin:14px 0 6px;color:#e67e22;',
+                h3: 'font-size:16px;font-weight:bold;margin:12px 0 4px;color:#f1c40f;',
+                p: 'font-size:16px;color:#2c3e50;line-height:1.8;margin:8px 0;',
+                blockquote: 'border-left:4px solid #3498db;background:#ebf5fb;padding:10px 15px;margin:10px 0;color:#555;',
+                ul: 'margin:8px 0;padding-left:25px;',
+                li: 'margin:4px 0;line-height:1.8;',
+                strong: 'font-weight:bold;color:#9b59b6;',
+                em: 'font-style:italic;color:#16a085;',
+                a: 'color:#e84393;text-decoration:underline;',
+                img: 'max-width:100%;border-radius:50%;margin:10px 0;'
+            }
+        };
+
+        // ==================== AI 描述解析器（核心） ====================
+        function parseStyleDescription(desc) {
+            // 默认基础样式（简约灰白）
+            let style = {
+                h1: 'font-size:22px;color:#333;font-weight:bold;margin:16px 0 8px;',
+                h2: 'font-size:18px;color:#555;font-weight:bold;margin:14px 0 6px;',
+                h3: 'font-size:16px;color:#666;font-weight:bold;margin:12px 0 4px;',
+                p: 'font-size:16px;color:#333;line-height:1.8;margin:8px 0;',
+                blockquote: 'border-left:4px solid #ccc;background:#f5f5f5;padding:10px 15px;margin:10px 0;color:#555;',
+                ul: 'margin:8px 0;padding-left:25px;',
+                li: 'margin:4px 0;line-height:1.8;',
+                strong: 'font-weight:bold;color:#e74c3c;',
+                em: 'font-style:italic;color:#777;',
+                a: 'color:#2980b9;text-decoration:underline;',
+                img: 'max-width:100%;border-radius:4px;margin:10px 0;'
+            };
+
+            if (!desc) return style;
+
+            // 颜色映射
+            const colors = {
+                '红': '#c0392b', '红色': '#c0392b', '蓝': '#1e3c72', '蓝色': '#1e3c72',
+                '绿': '#2e7d32', '绿色': '#2e7d32', '青': '#00838f', '青色': '#00838f',
+                '橙': '#e67e22', '橙色': '#e67e22', '黄': '#f1c40f', '黄色': '#f1c40f',
+                '紫': '#6c5ce7', '紫色': '#6c5ce7', '粉': '#d6336c', '粉色': '#d6336c',
+                '棕': '#5d4037', '棕色': '#5d4037', '灰': '#616161', '灰色': '#616161',
+                '黑': '#2c3e50', '黑色': '#2c3e50', '金': '#d4af37', '金色': '#d4af37',
+                '米': '#d7ccc8', '米色': '#d7ccc8', '白': '#f8f9fa', '白色': '#f8f9fa',
+                '深蓝': '#0d47a1', '深蓝色': '#0d47a1', '浅蓝': '#81d4fa', '天蓝': '#4fc3f7',
+                '深绿': '#1e5631', '墨绿': '#2e4a3a', '浅绿': '#a5d6a7', '草绿': '#4caf50',
+                '暗红': '#8b0000', '酒红': '#722f37', '粉红': '#e91e63', '玫红': '#c2185b',
+                '藏青': '#1a237e', '藏蓝': '#1a237e', '雾霾蓝': '#78909c', '莫兰迪': '#9e9e9e'
+            };
+
+            // 风格关键词
+            const styles = {
+                '商务': 'business', '企业': 'business', '专业': 'business', '正式': 'formal',
+                '简约': 'simple', '极简': 'simple', '简洁': 'simple', '干净': 'simple',
+                '政务': 'gov', '政府': 'gov', '公文': 'gov', '红头': 'gov',
+                '公告': 'notice', '通知': 'notice', '告示': 'notice', '声明': 'notice',
+                '文艺': 'literary', '文学': 'literary', '诗意': 'literary', '雅致': 'literary',
+                '花式': 'fancy', '创意': 'fancy', '活泼': 'fancy', '动感': 'fancy'
+            };
+
+            // 修饰词
+            const modifiers = {
+                '清新': { color: '#4caf50', bg: '#f1f8e9' },
+                '大气': { color: '#1e3c72', bold: true },
+                '稳重': { color: '#34495e', bold: true },
+                '高端': { color: '#2c3e50', bg: '#ecf0f1' },
+                '暗黑': { color: '#fff', bg: '#2c3e50', dark: true },
+                '温馨': { color: '#8d6e63', bg: '#faf6f2' },
+                '活泼': { color: '#e84393', bg: '#fce4ec' },
+                '复古': { color: '#5d4037', bg: '#efebe9' },
+                '现代': { color: '#212121', bg: '#f5f5f5' },
+                '渐变': { gradient: true },
+                '阴影': { shadow: true },
+                '立体': { shadow: true },
+                '扁平': { flat: true }
+            };
+
+            let chosenColor = null;
+            let chosenStyle = null;
+            let mods = [];
+
+            // 检测颜色
+            for (const [key, val] of Object.entries(colors)) {
+                if (desc.includes(key)) {
+                    chosenColor = val;
+                    break;
+                }
+            }
+
+            // 检测风格
+            for (const [key, val] of Object.entries(styles)) {
+                if (desc.includes(key)) {
+                    chosenStyle = val;
+                    break;
+                }
+            }
+
+            // 检测修饰
+            for (const [key, val] of Object.entries(modifiers)) {
+                if (desc.includes(key)) {
+                    mods.push(val);
+                }
+            }
+
+            // 应用颜色
+            if (chosenColor) {
+                style.h1 = style.h1.replace(/color:[^;]+;/, 'color:' + chosenColor + ';');
+                style.h2 = style.h2.replace(/color:[^;]+;/, 'color:' + chosenColor + ';');
+                style.h3 = style.h3.replace(/color:[^;]+;/, 'color:' + chosenColor + ';');
+                style.strong = style.strong.replace(/color:[^;]+;/, 'color:' + chosenColor + ';');
+                style.a = style.a.replace(/color:[^;]+;/, 'color:' + chosenColor + ';');
+            }
+
+            // 应用风格
+            if (chosenStyle === 'business') {
+                style.h1 += 'border-bottom:2px solid ' + (chosenColor || '#1e3c72') + ';padding-bottom:6px;';
+                style.blockquote = style.blockquote.replace(/border-left:[^;]+;/, 'border-left:4px solid ' + (chosenColor || '#1e3c72') + ';');
+            } else if (chosenStyle === 'formal' || chosenStyle === 'gov') {
+                style.h1 += 'text-align:center;border-bottom:2px solid ' + (chosenColor || '#b71c1c') + ';padding-bottom:6px;';
+                style.p += 'text-indent:2em;';
+            } else if (chosenStyle === 'notice') {
+                style.h1 += 'background:' + (chosenColor || '#ffebee') + ';padding:8px 15px;border-
+radius:4px;color:white;';
+            } else if (chosenStyle === 'literary') {
+                style.h1 += 'text-align:center;';
+                style.blockquote += 'font-style:italic;';
+            } else if (chosenStyle === 'fancy') {
+                style.h1 += 'text-shadow:1px 1px 2px rgba(0,0,0,0.2);';
+                style.blockquote += 'box-shadow:0 2px 6px rgba(0,0,0,0.05);';
+            }
+
+            // 应用修饰
+            mods.forEach(mod => {
+                if (mod.color) {
+                    style.h1 = style.h1.replace(/color:[^;]+;/, 'color:' + mod.color + ';');
+                    style.strong = style.strong.replace(/color:[^;]+;/, 'color:' + mod.color + ';');
+                }
+                if (mod.bg) {
+                    style.blockquote = style.blockquote.replace(/background:[^;]+;/, 'background:' + mod.bg + ';');
+                }
+                if (mod.dark) {
+                    style.p = style.p.replace(/color:[^;]+;/, 'color:#ecf0f1;');
+                    style.h1 = style.h1.replace(/color:[^;]+;/, 'color:#fff;');
+                    style.h2 = style.h2.replace(/color:[^;]+;/, 'color:#ddd;');
+                    style.h3 = style.h3.replace(/color:[^;]+;/, 'color:#ccc;');
+                    style.blockquote = style.blockquote.replace(/background:[^;]+;/, 'background:#34495e;');
+                    style.blockquote = style.blockquote.replace(/color:[^;]+;/, 'color:#ecf0f1;');
+                }
+                if (mod.shadow) {
+                    style.h1 += 'text-shadow:2px 2px 4px rgba(0,0,0,0.2);';
+                    style.img += 'box-shadow:0 4px 8px rgba(0,0,0,0.1);';
+                }
+                if (mod.gradient && chosenColor) {
+                    style.h1 = style.h1.replace(/color:[^;]+;/, 'background:linear-gradient(90deg,' + chosenColor + ',#4ecdc4);-webkit-background-clip:text;-webkit-text-fill-color:transparent;');
+                }
+            });
+
+            return style;
+        }
+
+        // ==================== 渲染引擎 ====================
+        function escapeHtml(str) {
+            return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+        }
+
+        function applyInlineStyles(text, style) {
+            text = text.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, (match, alt, url) => {
+                return `<img src="${url}" alt="${escapeHtml(alt)}" style="${style.img}" />`;
+            });
+            text = text.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (match, txt, url) => {
+                return `<a href="${url}" style="${style.a}" target="_blank">${txt}</a>`;
+            });
+            text = text.replace(/\*\*([^*]+)\*\*/g, `<strong style="${style.strong}">$1</strong>`);
+            text = text.replace(/\*([^*]+)\*/g, `<em style="${style.em}">$1</em>`);
+            text = text.replace(/`([^`]+)`/g, `<code style="background:#f0f0f0;padding:2px 4px;border-radius:3px;font-family:monospace;">$1</code>`);
+            return text;
+        }
+
+        function renderMarkdown(md, style) {
+            const lines = md.split('\n');
+            let html = '';
+            let inList = false;
+            let listType = null;
+            let listContent = '';
+
+            function closeList() {
+                if (inList) {
+                    if (listType === 'ul') {
+                        listContent += '</ul>';
+                    } else if (listType === 'ol') {
+                        listContent += '</ol>';
+                    }
+                    html += listContent;
+                    listContent = '';
+                    inList = false;
+                    listType = null;
+                }
+            }
+
+            for (let i = 0; i < lines.length; i++) {
+                const line = lines[i];
+                if (/^\s*---+\s*$/.test(line)) {
+                 closeList();
+                    html += '<hr style="border:none;border-top:1px solid #ddd;margin:20px 0;" />';
+                    continue;
+                }
+                let match = line.match(/^(#{1,6})\s+(.*)$/);
+                if (match) {
+                    closeList();
+                    const level = match[1].length;
+                    const text = match[2];
+                    const tag = 'h' + level;
+                    let styleAttr = '';
+                    if (level === 1) styleAttr = style.h1;
+                    else if (level === 2) styleAttr = style.h2;
+                    else if (level === 3) styleAttr = style.h3;
+                    else if (level >= 4) styleAttr = style.h3;
+                    html += `<${tag} style="${styleAttr}">${applyInlineStyles(text, style)}</${tag}>`;
+                    continue;
+                }
+                match = line.match(/^\>\s?(.*)$/);
+                if (match) {
+                    closeList();
+                    const content = match[1];
+                    html += `<blockquote style="${style.blockquote}">${applyInlineStyles(content, style)}</blockquote>`;
+                    continue;
+                }
+                match = line.match(/^\s*[-*]\s+(.*)$/);
+                if (match) {
+                    if (!inList || listType !== 'ul') {
+                        closeList();
+                        inList = true;
+                        listType = 'ul';
+                        listContent = '<ul style="' + style.ul + '">';
+                    }
+                    listContent += `<li style="${style.li}">${applyInlineStyles(match[1], style)}</li>`;
+                    continue;
+                }
+                match = line.match(/^\s*\d+\.\s+(.*)$/);
+                if (match) {
+                    if (!inList || listType !== 'ol') {
+                        closeList();
+                        inList = true;
+                        listType = 'ol';
+                        listContent = '<ol style="' + style.ul + '">';
+                    }
+                    listContent += `<li style="${style.li}">${applyInlineStyles(match[1], style)}</li>`;
+                    continue;
+                }
+                if (line.trim() === '') {
+                    closeList();
+                    continue;
+                }
+                closeList();
+                html += `<p style="${style.p}">${applyInlineStyles(line, style)}</p>`;
+            }
+            closeList();
+            return html;
+        }
+
+        // ==================== 事件绑定 ====================
+        const editor = document.getElementById('editor');
+        const preview = document.getElementById('preview');
+        const templateSelect = document.getElementById('template-select');
+        const copyBtn = document.getElementById('copy-btn');
+        const aiDescInput = document.getElementById('ai-desc');
+        const aiBtn = document.getElementById('ai-btn');
+
+        let currentStyle = templates[templateSelect.value]; // 初始样式
+
+        function updatePreview() {
+            const md = editor.value;
+            const rendered = renderMarkdown(md, currentStyle);
+            preview.innerHTML = rendered;
+        }
+
+        // 预设模板切换
+        templateSelect.addEventListener('change', function() {
+            currentStyle = templates[templateSelect.value];
+            aiDescInput.value = ''; // 清空AI描述，表示使用预设
+            updatePreview();
+        });
+
+        // AI 排版按钮
+        aiBtn.addEventListener('click', function() {
+            const desc = aiDescInput.value.trim();
+            if (!desc) {
+                alert('请先输入你想要的排版效果描述，例如：深蓝色商务风，标题加粗，引用有背景色');
+                return;
+            }
+            currentStyle = parseStyleDescription(desc);
+            // 将预设选择设为空（表示自定义）
+            templateSelect.value = '';
+            updatePreview();
+        });
+
+        // 回车触发 AI 排版
+        aiDescInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                aiBtn.click();
+            }
+        });
+
+        // 编辑器输入实时更新
+        editor.addEventListener('input', updatePreview);
+
+        // 初始示例内容
+        const initialText = `# 我的第一篇文章\n\n## 二级标题\n\n这是一段正文，**重点内容**会加粗，*斜体文字*也很简单。\n\n> 这是一段引用，适合用来强调重点。\n\n- 列表项一\n- 列表项二\n- 列表项三\n\n1. 有序列表第一项\n2. 有序列表第二项\n\n![示例图片](https://picsum.photos/600/300)\n\n[这是一个链接](https://example.com)`;
+        editor.value = initialText;
+        currentStyle = templates[templateSelect.value];
+        updatePreview();
+
+        // 复制功能
+        copyBtn.addEventListener('click', function() {
+            const htmlContent = preview.innerHTML;
+            if (navigator.clipboard && navigator.clipboard.write) {
+                const blob = new Blob([htmlContent], { type: 'text/html' });
+                const item = new ClipboardItem({ 'text/html': blob });
+                navigator.clipboard.write([item]).then(() => {
+                    alert('✅ 复制成功！请到公众号后台粘贴（Ctrl+V）');
+                }).catch(() => {
+                    fallbackCopy(htmlContent);
+                });
+            } else {
+                fallbackCopy(htmlContent);
+            }
+        });
+
+        function fallbackCopy(html) {
+            const textarea = document.createElement('textarea');
+            textarea.value = preview.innerText;
+            document.body.appendChild(textarea);
+            textarea.select();
+            try {
+                document.execCommand('copy');
+                alert('✅ 复制成功（纯文本模式）！请到公众号后台粘贴，样式可能需手动调整。');
+            } catch (e) {
+                alert('复制失败，请手动全选预览区内容复制。');
+            }
+            document.body.removeChild(textarea);
+        }
+    </script>
+</body>
+</html>
+```
+
+---
